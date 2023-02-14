@@ -52,7 +52,6 @@ test-ligo:
 	@$(call testing,contract_1/add_admin.test.mligo)
 	@$(call testing,contract_1/remove_admin.test.mligo)
 	@$(call testing,contract_1/pay_contract_fees.test.mligo)
-	@$(call testing,contract_1/set_text.test.mligo)
 	@echo "Tested successfully"
 
 test-integration:

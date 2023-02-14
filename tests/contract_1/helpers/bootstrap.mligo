@@ -19,8 +19,7 @@ let base_admin : address = "tz1cGkwCNGQqeA5BcAUqi8KoZxwmLfMkJEbR"
 
 let get_base_storage(defaultAdmin: address) : Main.Storage.t = 
     let base_storage: Main.Storage.t = {
-        user_map = Map.empty;
-        user_blacklist = [];
+        creator_blacklist = [];
         admin_list = Map.literal[
             (defaultAdmin, true)
         ];

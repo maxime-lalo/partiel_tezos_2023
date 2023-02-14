@@ -66,7 +66,7 @@ let remove_admin(remove_admin_param, store: Parameter.remove_admin_param * Stora
 let pay_contract_fees(_pay_contract_fees_param, store : Parameter.pay_contract_fees_param * Storage.t) : Storage.t =
 	let amount : tez = Tezos.get_amount() in
 	let sender: address = Tezos.get_sender() in
-	if(amount = 10tez) then
+	if(amount >= 10tez) then
 		match Map.find_opt sender store.has_paid with
 			Some _ -> failwith Errors.fees_already_paid
 			| None -> 
@@ -120,3 +120,4 @@ let main (action, store : action * Storage.t) : return =
 
 // Views
 [@view] let get_storage ((),s: unit * Storage.t) : Storage.t = s
+[@view] let get_collections ((), s : unit * Storage.t) : Storage.collection_list = s.collections

@@ -36,9 +36,3 @@ let pay_contract_fees_success(contr, amount: contr * tez) =
 
 let pay_contract_fees_failure(contr, amount, error: contr * tez * string) =
     Assert.tx_failure(call_amount(PayContractFees, contr, amount), error)
-
-let set_text_success(contr, text: contr * string) =
-    Assert.tx_success(call(SetText(text), contr))
-
-let set_text_failure(contr, text, error: contr * string * string) =
-    Assert.tx_failure(call(SetText(text), contr), error)
