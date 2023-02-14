@@ -3,9 +3,7 @@
 #import "errors.mligo" "Errors"
 #import "fa2_storage.mligo" "NFT_FA2_Storage"
 type action =
-	SetText of Parameter.set_text_param
-	| NukeText of Parameter.nuke_text_param
-	| AddAdmin of Parameter.add_admin_param
+	AddAdmin of Parameter.add_admin_param
 	| AcceptAdmin of Parameter.accept_admin_param
 	| RemoveAdmin of Parameter.remove_admin_param
 	| PayContractFees of Parameter.pay_contract_fees_param
@@ -17,13 +15,6 @@ type return = operation list * Storage.t
 type ext_storage = NFT_FA2_Storage.t
 type lambda_create_contract = (key_hash option * tez * ext_storage) -> (operation * address) 
 
-// Utility functions 
-let get_tier(count:int) : Storage.tier = 
-	if(count < 2) then Moldu
-	else if(count < 3) then Bronze
-	else if(count < 4) then Gold
-	else Platinum
-
 // Assert List
 let assert_admin(_assert_admin_param, store: Parameter.assert_admin_param * Storage.t) : unit =
 	match  Map.find_opt(Tezos.get_sender():address) store.admin_list with
@@ -33,7 +24,7 @@ let assert_admin(_assert_admin_param, store: Parameter.assert_admin_param * Stor
 
 let assert_blacklist(assert_blacklist_param, store : Parameter.assert_blacklist_param * Storage.t) : unit = 
 	let is_blacklisted = fun (user : Storage.user) -> if(user = assert_blacklist_param) then failwith Errors.blacklisted else () in
-	let _ = List.iter is_blacklisted store.user_blacklist in
+	let _ = List.iter is_blacklisted store.creator_blacklist in
 	()
 
 let assert_access(_assert_access_param, store: Parameter.assert_access_param * Storage.t) : unit =
@@ -72,22 +63,10 @@ let remove_admin(remove_admin_param, store: Parameter.remove_admin_param * Stora
 			in
 		{ store with admin_list }
 
-// Contract functions
-let set_text(set_text_param, store : Parameter.set_text_param * Storage.t) : Storage.t =
-	let sender: address = Tezos.get_sender() in
-	let user_map: Storage.user_mapping = 
-		match Map.find_opt sender store.user_map with
-			Some(last_entry) -> 
-				let (_text, _tier, count) = last_entry in
-				Map.update sender (Some(set_text_param, get_tier(count + 1), count + 1)) store.user_map
-			| None -> Map.add sender (set_text_param, get_tier(1) , 1) store.user_map
-		in
-	{ store with user_map }
-
 let pay_contract_fees(_pay_contract_fees_param, store : Parameter.pay_contract_fees_param * Storage.t) : Storage.t =
 	let amount : tez = Tezos.get_amount() in
 	let sender: address = Tezos.get_sender() in
-	if(amount = 1tez) then
+	if(amount = 10tez) then
 		match Map.find_opt sender store.has_paid with
 			Some _ -> failwith Errors.fees_already_paid
 			| None -> 
@@ -96,15 +75,6 @@ let pay_contract_fees(_pay_contract_fees_param, store : Parameter.pay_contract_f
 	else
 		failwith Errors.wrong_fees_amount
 	store
-
-// Admin functions
-let nuke_text(nuke_text_param, store : Parameter.nuke_text_param * Storage.t) : Storage.t =
-	match Map.find_opt nuke_text_param store.user_map with
-		Some _ -> 
-			let user_blacklist : Storage.blacklist_mapping = nuke_text_param :: store.user_blacklist in
-			let user_map : Storage.user_mapping = Map.remove nuke_text_param store.user_map in
-			{ store with user_map; user_blacklist }
-		| None -> failwith Errors.text_not_found
 
 let create_collection(_create_collection_param, store : Parameter.create_collection_param * Storage.t) : Storage.t =
     let sender = Tezos.get_sender() in
@@ -131,12 +101,6 @@ let create_collection(_create_collection_param, store : Parameter.create_collect
 // Main
 let main (action, store : action * Storage.t) : return =
 	let new_store : Storage.t = match action with
-		SetText (text) -> 
-			let _ : unit = assert_access((), store) in
-			set_text (text, store)
-		| NukeText (user) -> 
-			let _ : unit = assert_admin((), store) in 
-			nuke_text(user, store)
 		| AddAdmin (user) -> 
 			let _ : unit = assert_admin((), store) in 
 			add_admin(user, store)
@@ -146,7 +110,7 @@ let main (action, store : action * Storage.t) : return =
 			remove_admin(user, store)
 		| PayContractFees _ -> pay_contract_fees((), store)
 		| CreateCollection _ -> create_collection((), store)
-		| Reset -> { store with user_map = Map.empty }
+		| Reset -> { store with creator_whitelist = []; creator_blacklist = []; admin_list = Map.empty; has_paid = Map.empty; collections = [] }
 		in
 	(([] : operation list), new_store)
 
