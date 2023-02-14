@@ -22,8 +22,8 @@ let assert_admin(_assert_admin_param, store: Parameter.assert_admin_param * Stor
 			if is_admin then () else failwith Errors.not_admin
 		| None -> failwith Errors.not_admin
 
-let assert_blacklist(assert_blacklist_param, store : Parameter.assert_blacklist_param * Storage.t) : unit = 
-	let is_blacklisted = fun (user : Storage.user) -> if(user = assert_blacklist_param) then failwith Errors.blacklisted else () in
+let assert_blacklist(_assert_blacklist_param, store : Parameter.assert_blacklist_param * Storage.t) : unit = 
+	let is_blacklisted = fun (user : Storage.user) -> if(user = Tezos.get_sender()) then failwith Errors.blacklisted else () in
 	let _ = List.iter is_blacklisted store.creator_blacklist in
 	()
 
@@ -109,8 +109,11 @@ let main (action, store : action * Storage.t) : return =
 			let _ : unit = assert_admin((), store) in 
 			remove_admin(user, store)
 		| PayContractFees _ -> pay_contract_fees((), store)
-		| CreateCollection _ -> create_collection((), store)
-		| Reset -> { store with creator_whitelist = []; creator_blacklist = []; admin_list = Map.empty; has_paid = Map.empty; collections = [] }
+		| CreateCollection _ -> 
+			let _ : unit = assert_access((), store) in	
+			let _ : unit = assert_blacklist((), store) in	
+			create_collection((), store)
+		| Reset -> { store with creator_blacklist = []; admin_list = Map.empty; has_paid = Map.empty; collections = [] }
 		in
 	(([] : operation list), new_store)
 
