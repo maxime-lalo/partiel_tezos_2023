@@ -1,0 +1,33 @@
+{
+    "private": true,
+    "name": "cours-tezos-2k22",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "directories": {
+        "test": "tests"
+    },
+    "scripts": {
+        "deploy": "ts-node ./scripts/deploy.ts"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/maxime-lalo/cours-tezos-2k22.git"
+    },
+    "author": "Maxime LALO",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/maxime-lalo/cours-tezos-2k22/issues"
+    },
+    "homepage": "https://github.com/maxime-lalo/cours-tezos-2k22#readme",
+    "dependencies": {
+        "@taquito/signer": "^15.0.0",
+        "@taquito/taquito": "^15.0.0",
+        "@taquito/utils": "^15.0.0",
+        "dotenv": "^16.0.3",
+        "node-fetch": "^3.3.0",
+        "path": "^0.12.7",
+        "ts-node": "^10.9.1",
+        "typescript": "^4.9.4"
+    }
+}
